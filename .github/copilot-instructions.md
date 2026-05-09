@@ -25,6 +25,8 @@ These instructions apply to all code suggestions and completions in the `analyti
 | Constants | UPPER_SNAKE_CASE | `MAX_POOL_SIZE` |
 | Files | kebab-case | `analytics-router.js` |
 | Folders | kebab-case | `src/routes/` |
+| UI Components | PascalCase | `AnalyticsChart.jsx` |
+| UI Props | camelCase | `eventType`, `onDateChange` |
 
 ---
 
@@ -52,21 +54,73 @@ These instructions apply to all code suggestions and completions in the `analyti
 ---
 
 ## Testing
-- Framework: **Jest** + **Supertest**.
+- Framework: **Jest** + **Supertest** for API; **Jest** + **React Testing Library** for UI.
 - Always mock `src/db.js` using `jest.mock('../db')` — never hit a real database in tests.
-- Test file location: `src/__tests__/<module>.test.js`.
-- Every new function or endpoint must have tests for:
+- Test file location: `src/__tests__/<module>.test.js` for API; `src/components/<Name>/<Name>.test.jsx` for UI.
+- Every new API endpoint must have tests for:
   - Happy path (200 with correct data)
   - Missing required params (400)
   - Invalid input format (400)
   - Database/server error (500)
-- Naming: `describe('GET /analytics/<route>', () => { it('should ...') })`.
+- Every new UI component must have tests for:
+  - Renders correctly with default props
+  - Renders all visual states (loading, empty, error)
+  - Handles user interactions correctly
+- Naming: `describe('GET /analytics/<route>', () => { it('should ...') })` for API.
+- Naming: `describe('<ComponentName>', () => { it('should render ...') })` for UI.
 - Minimum **80% code coverage**.
+
+---
+
+## Spec-Driven Development (SDD)
+
+This project follows Spec-Driven Development. **Never write code before a spec exists and is approved.**
+
+### API SDD
+- API design doc must exist in `docs/design/` before any route code is written.
+- Design doc defines: endpoint, params, request/response shape, DB changes.
+- Code must match the spec exactly — flag any deviations.
+
+### UI SDD
+- A **Figma design** must exist before any UI component code is written.
+- A **UI design doc** must exist in `docs/design/` (prefix: `ui-`) before coding.
+- Code must implement the Figma spec exactly — never invent UI without a design reference.
+- Every component must have a matching **Storybook story** for each visual state.
+
+#### UI Spec Stack
+| Layer | Tool |
+|-------|------|
+| Design spec | Figma (source of truth) |
+| User stories | Confluence |
+| Living contract | Storybook |
+| Visual regression | Jest snapshots / Chromatic |
+
+#### Component File Structure
+```
+src/components/
+  <ComponentName>/
+    <ComponentName>.jsx         ← Component implementation
+    <ComponentName>.stories.jsx ← Storybook stories (one per state)
+    <ComponentName>.test.jsx    ← Unit tests
+```
+
+#### Storybook Story Requirements
+- Every component needs stories for: `Default`, `Loading`, `Empty`, `Error`
+- Story names must match Figma frame names where possible
+- Export a `Default` story at minimum
+
+#### UI Component Rules
+- Always implement all visual states: default, loading, empty, error
+- Always add ARIA labels and keyboard navigation
+- Never hardcode colours — always use design tokens / CSS variables
+- Always implement responsive behaviour for mobile, tablet, desktop
+- Use React functional components with hooks only — no class components
 
 ---
 
 ## Branching
 - Feature branches: `feature/<short-description>`
+- UI branches: `ui/<short-description>`
 - Bug fix branches: `fix/<short-description>`
 - Hotfix branches: `hotfix/<short-description>`
 - Breaking changes / major versions: `ver<X.Y>` (e.g. `ver2.0`)
@@ -80,12 +134,13 @@ Follow **Conventional Commits**:
 ```
 <type>(<scope>): <short summary under 72 chars>
 ```
-Allowed types: `feat`, `fix`, `chore`, `docs`, `test`, `refactor`, `perf`, `breaking`.
+Allowed types: `feat`, `fix`, `chore`, `docs`, `test`, `refactor`, `perf`, `breaking`, `ui`.
 
 Examples:
 ```
 feat(analytics): add event-type filter to user endpoint
 fix(db): handle null userId gracefully
+ui(dashboard): add analytics event chart component
 breaking(analytics): restructure response payload for v2
 ```
 
@@ -102,20 +157,22 @@ breaking(analytics): restructure response payload for v2
 ## Design Documents: GitHub vs Confluence Split
 
 ### GitHub `docs/design/` — Code-centric, lives with the repo
-Put here: API specs, SQL/schema changes, breaking change details, implementation decisions, module-level architecture.
+Put here: API specs, SQL/schema changes, breaking change details, UI component props/states/tokens/accessibility, Storybook story definitions, implementation decisions.
 
 ### Confluence — Team-centric, visible to all stakeholders
-Put here: High-level architecture, product requirements, ADRs, runbooks, onboarding, roadmap, cross-team communication.
+Put here: High-level architecture, product requirements, user stories + acceptance criteria, ADRs, runbooks, onboarding, roadmap, cross-team communication.
 
 ### Never duplicate — always cross-reference
-- GitHub design doc header must include a `**Confluence**:` link.
+- GitHub design doc header must include `**Confluence**:` and `**Figma**:` links.
 - Confluence page must include a `**GitHub Design Doc**:` link.
-- A `docs/confluence-template-<name>.md` stub is always created alongside the GitHub design doc for easy pasting into Confluence.
+- Both are created automatically — no copy/paste required.
 
 ---
 
 ## Pull Requests
 - PR titles follow Conventional Commits format.
-- PR descriptions must include: Summary, Changes, Breaking Changes, How to Test, Related Issues.
+- API PR descriptions must include: Summary, Changes, Breaking Changes, How to Test, Related Issues.
+- UI PR descriptions must also include: Screenshots or Figma link, Visual States covered, Storybook link.
 - All PRs require at least one reviewer and must pass CI before merging.
 - PRs with breaking changes must be labeled `breaking-change`.
+- PRs with UI changes must include a screenshot or Figma link.
