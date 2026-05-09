@@ -4,7 +4,7 @@
 **Author**: srivenkataramakishore
 **Branch**: `feature/analytics-by-event-type`
 **Version**: 1.1.0
-**Status**: Draft
+**Status**: Implemented
 
 ---
 
@@ -82,7 +82,7 @@ GET /analytics/event?eventType=click&startDate=2026-04-01&endDate=2026-04-30
 | 500 | Database error |
 
 ### 5.3 Database Changes
-No schema changes. Two queries against the existing `analytics_events` table:
+No schema changes. Two parallel queries against the existing `analytics_events` table run via `Promise.all()`:
 1. Aggregate query — daily count grouped by `DATE(event_time)`.
 2. Detail query — raw rows ordered by `event_time DESC`.
 
@@ -103,7 +103,7 @@ N/A — no breaking changes.
 
 ## 8. Testing Plan
 - Unit tests with mocked DB for all happy path and error scenarios.
-- Tests for: missing `eventType`, missing dates, invalid date format, start > end, DB error, valid request.
+- Tests for: missing `eventType`, missing dates, invalid date format, start > end, DB error, valid request, empty results.
 
 ---
 
@@ -122,8 +122,8 @@ N/A — no breaking changes.
 ---
 
 ## 11. Open Questions
-- Should `eventType` matching be case-sensitive? (Assuming yes for now — matches DB values exactly.)
-- Should we support multiple event types in one call (e.g. `eventType=click,pageview`)? (Out of scope for now.)
+- Should `eventType` matching be case-sensitive? (Assuming yes — matches DB values exactly.)
+- Should we support multiple event types in one call? (Out of scope for now.)
 
 ---
 
