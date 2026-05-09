@@ -99,10 +99,18 @@ breaking(analytics): restructure response payload for v2
 
 ---
 
-## Design Documents
-- Store all design docs in `docs/design/<YYYY-MM-DD>-<short-description>.md`.
-- A design doc is required before implementing new endpoints, breaking changes, or schema changes.
-- Follow the 12-section template defined in `.claude/CLAUDE.md`.
+## Design Documents: GitHub vs Confluence Split
+
+### GitHub `docs/design/` — Code-centric, lives with the repo
+Put here: API specs, SQL/schema changes, breaking change details, implementation decisions, module-level architecture.
+
+### Confluence — Team-centric, visible to all stakeholders
+Put here: High-level architecture, product requirements, ADRs, runbooks, onboarding, roadmap, cross-team communication.
+
+### Never duplicate — always cross-reference
+- GitHub design doc header must include a `**Confluence**:` link.
+- Confluence page must include a `**GitHub Design Doc**:` link.
+- A `docs/confluence-template-<name>.md` stub is always created alongside the GitHub design doc for easy pasting into Confluence.
 
 ---
 

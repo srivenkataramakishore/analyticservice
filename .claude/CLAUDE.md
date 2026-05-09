@@ -265,102 +265,104 @@ Every design document must follow this structure:
 **Branch**: <branch name>
 **Version**: <SemVer e.g. 2.0.0>
 **Status**: Draft | In Review | Approved | Implemented
+**Confluence**: <link to Confluence page>
 
 ---
 
 ## 1. Overview
-<!-- 2-3 sentence summary of what this document covers and why. -->
-
 ## 2. Problem Statement
-<!-- What problem are we solving? What is the current limitation or gap? -->
-
 ## 3. Goals
-<!-- What should this change achieve? Use bullet points. -->
--
--
-
 ## 4. Non-Goals
-<!-- What is explicitly out of scope for this change? -->
--
--
-
 ## 5. Proposed Solution
-<!-- Describe the solution in detail. Include endpoint changes, data flow, logic. -->
-
-### 5.1 API Changes
-<!-- List any new, modified, or removed endpoints. -->
-| Method | Endpoint | Change | Notes |
-|--------|----------|--------|-------|
-| GET | /analytics/user | Modified | Added pagination params |
-
-### 5.2 Request & Response Changes
-<!-- Show before/after examples of request params and response payloads. -->
-
-**Before:**
-```json
-{ "userId": "123", "count": 5, "data": [...] }
-```
-
-**After:**
-```json
-{ "userId": "123", "page": 1, "pageSize": 20, "total": 100, "data": [...] }
-```
-
-### 5.3 Database Changes
-<!-- Any schema changes to analytics_events or new tables. -->
-
-### 5.4 Architecture Changes
-<!-- Describe any infrastructure or architectural changes (caching, queues, etc.) -->
-
+  ### 5.1 API Changes
+  ### 5.2 Request & Response Changes
+  ### 5.3 Database Changes
+  ### 5.4 Architecture Changes
 ## 6. Breaking Changes
-<!-- List every breaking change. Write "None" if not applicable. -->
--
--
-
 ## 7. Migration Plan
-<!-- How will existing consumers migrate to the new version? Step-by-step. -->
-1.
-2.
-
 ## 8. Testing Plan
-<!-- How will this be tested? Unit, integration, load tests? -->
-- Unit tests: 
-- Integration tests: 
-- Load tests: 
-
 ## 9. Rollout Plan
-<!-- How will this be deployed? Phased? Feature flag? Blue-green? -->
-
 ## 10. Risks & Mitigations
-<!-- What could go wrong and how will you handle it? -->
-| Risk | Likelihood | Mitigation |
-|------|------------|------------|
-| DB query timeout under load | Medium | Add query timeout + Redis cache |
-
 ## 11. Open Questions
-<!-- Unresolved decisions that need input. -->
--
-
 ## 12. References
-<!-- Links to related PRs, issues, ADRs, or external docs. -->
--
 ```
 
 ### Design Document Lifecycle
-1. **Draft** — Claude or the developer creates the doc before coding starts.
-2. **In Review** — Shared with the team for feedback; update the `Status` field.
+1. **Draft** — Claude or the developer creates the GitHub doc and Confluence page before coding starts.
+2. **In Review** — Shared with the team for feedback; update the `Status` field in both places.
 3. **Approved** — Sign-off received; coding can begin.
-4. **Implemented** — Feature is merged; doc is updated with any deviations from the plan.
+4. **Implemented** — Feature is merged; both docs updated with any deviations from the plan.
 
 ### Claude's Responsibility
 - When asked to implement a new feature or breaking change, **always check `docs/design/`** for an existing design doc first.
 - If no design doc exists for a significant change, **create one and ask the user to review it** before writing any code.
 - When implementing from a design doc, **follow it strictly** and flag any deviations to the user.
-- After implementation, **update the design doc status** to `Implemented`.
+- After implementation, **update the design doc status** to `Implemented` in both GitHub and Confluence.
 
 ---
 
-## 9. General Claude Behaviour Rules
+## 9. GitHub vs Confluence Documentation Split
+
+Never duplicate content between GitHub and Confluence. Each has a distinct purpose. Cross-reference instead.
+
+### Rule: What Goes Where
+
+| Content Type | GitHub `docs/design/` | Confluence |
+|---|---|---|
+| API endpoint spec (params, request/response) | ✅ | ❌ |
+| SQL queries & DB schema changes | ✅ | ❌ |
+| Breaking change details & migration steps | ✅ | ❌ |
+| Implementation decisions tied to code | ✅ | ❌ |
+| Code-level architecture (module structure) | ✅ | ❌ |
+| High-level system architecture overview | ❌ | ✅ |
+| Product requirements & user stories | ❌ | ✅ |
+| Architecture Decision Records (ADRs) | ❌ | ✅ |
+| Runbooks & on-call / incident guides | ❌ | ✅ |
+| Onboarding & team setup guides | ❌ | ✅ |
+| Cross-team communication & announcements | ❌ | ✅ |
+| Roadmap & release planning | ❌ | ✅ |
+| QA test plans (non-unit) | ❌ | ✅ |
+
+### Rule: Always Cross-Reference
+- Every GitHub design doc **must** include a `**Confluence**:` link in its header pointing to the related Confluence page.
+- Every Confluence page **must** include a `**GitHub Design Doc**:` link pointing to the file in the repo.
+- Never copy content between the two — link to the other source instead.
+
+### Rule: Confluence Page Structure
+Every Confluence page paired with a GitHub design doc must follow this template (see `docs/confluence-template.md`):
+
+```
+Title: [analyticservice] <Feature Name>
+Labels: analyticservice, design, <version>
+
+Sections:
+1. Summary (2-3 sentences, non-technical)
+2. Background & Motivation
+3. High-Level Architecture
+4. Stakeholders & Approvers
+5. Timeline
+6. Links (GitHub design doc, PR, branch, Jira ticket)
+7. Open Questions (cross-team only)
+8. Decision Log
+```
+
+### Rule: Who Owns What
+| Owner | Responsible For |
+|---|---|
+| Developer / Claude | GitHub `docs/design/` — technical spec, always up to date with code |
+| Developer / Claude | Creating the initial Confluence page stub with links |
+| PM / Tech Lead | Filling in Confluence business context, stakeholders, timeline |
+| Everyone | Keeping cross-references accurate after changes |
+
+### Claude's Responsibility for Confluence
+- When creating a GitHub design doc, **always also create a `docs/confluence-template-<name>.md`** file as a ready-to-paste Confluence page stub.
+- The stub must include the GitHub doc link, branch name, and all section headers pre-filled.
+- Remind the user: *"Please paste this into Confluence under the `analyticservice` space and add the Confluence URL back to the GitHub design doc header."*
+- Never create the Confluence page directly — Claude creates the stub file; the user pastes it into Confluence.
+
+---
+
+## 10. General Claude Behaviour Rules
 
 - Always work on the **correct branch** for the task — confirm with the user if unsure.
 - When making changes, **read existing files first** before modifying them.
