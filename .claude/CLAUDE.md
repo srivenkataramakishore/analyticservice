@@ -224,7 +224,143 @@ npm test -- --coverage    # run with coverage report
 
 ---
 
-## 8. General Claude Behaviour Rules
+## 8. Design Documents
+
+### When to Create a Design Document
+A design document is **required** before starting work on any of the following:
+- A new API endpoint or service
+- A breaking change or major version bump
+- A database schema change
+- A significant architectural change (caching, queuing, new integrations)
+- Any feature estimated to take more than 1 day of work
+
+For small bug fixes, dependency upgrades, or minor tweaks, a design doc is **not required**.
+
+### Where to Store Design Documents
+- All design documents live in the **`docs/design/`** folder at the root of the repo.
+- File naming: `<YYYY-MM-DD>-<short-description>.md` (e.g. `2026-05-09-add-pagination.md`)
+- For breaking changes / major versions, also place a copy at the root as `BREAKING_CHANGES.md`.
+
+```
+analyticservice/
+├── docs/
+│   └── design/
+│       ├── 2026-04-22-initial-analytics-service.md
+│       ├── 2026-05-09-add-pagination.md
+│       └── 2026-05-09-ver2-breaking-changes.md
+├── .claude/
+│   └── CLAUDE.md
+├── src/
+└── ...
+```
+
+### Design Document Template
+Every design document must follow this structure:
+
+```markdown
+# Design Document: <Feature or Change Title>
+
+**Date**: YYYY-MM-DD
+**Author**: <name or team>
+**Branch**: <branch name>
+**Version**: <SemVer e.g. 2.0.0>
+**Status**: Draft | In Review | Approved | Implemented
+
+---
+
+## 1. Overview
+<!-- 2-3 sentence summary of what this document covers and why. -->
+
+## 2. Problem Statement
+<!-- What problem are we solving? What is the current limitation or gap? -->
+
+## 3. Goals
+<!-- What should this change achieve? Use bullet points. -->
+-
+-
+
+## 4. Non-Goals
+<!-- What is explicitly out of scope for this change? -->
+-
+-
+
+## 5. Proposed Solution
+<!-- Describe the solution in detail. Include endpoint changes, data flow, logic. -->
+
+### 5.1 API Changes
+<!-- List any new, modified, or removed endpoints. -->
+| Method | Endpoint | Change | Notes |
+|--------|----------|--------|-------|
+| GET | /analytics/user | Modified | Added pagination params |
+
+### 5.2 Request & Response Changes
+<!-- Show before/after examples of request params and response payloads. -->
+
+**Before:**
+```json
+{ "userId": "123", "count": 5, "data": [...] }
+```
+
+**After:**
+```json
+{ "userId": "123", "page": 1, "pageSize": 20, "total": 100, "data": [...] }
+```
+
+### 5.3 Database Changes
+<!-- Any schema changes to analytics_events or new tables. -->
+
+### 5.4 Architecture Changes
+<!-- Describe any infrastructure or architectural changes (caching, queues, etc.) -->
+
+## 6. Breaking Changes
+<!-- List every breaking change. Write "None" if not applicable. -->
+-
+-
+
+## 7. Migration Plan
+<!-- How will existing consumers migrate to the new version? Step-by-step. -->
+1.
+2.
+
+## 8. Testing Plan
+<!-- How will this be tested? Unit, integration, load tests? -->
+- Unit tests: 
+- Integration tests: 
+- Load tests: 
+
+## 9. Rollout Plan
+<!-- How will this be deployed? Phased? Feature flag? Blue-green? -->
+
+## 10. Risks & Mitigations
+<!-- What could go wrong and how will you handle it? -->
+| Risk | Likelihood | Mitigation |
+|------|------------|------------|
+| DB query timeout under load | Medium | Add query timeout + Redis cache |
+
+## 11. Open Questions
+<!-- Unresolved decisions that need input. -->
+-
+
+## 12. References
+<!-- Links to related PRs, issues, ADRs, or external docs. -->
+-
+```
+
+### Design Document Lifecycle
+1. **Draft** — Claude or the developer creates the doc before coding starts.
+2. **In Review** — Shared with the team for feedback; update the `Status` field.
+3. **Approved** — Sign-off received; coding can begin.
+4. **Implemented** — Feature is merged; doc is updated with any deviations from the plan.
+
+### Claude's Responsibility
+- When asked to implement a new feature or breaking change, **always check `docs/design/`** for an existing design doc first.
+- If no design doc exists for a significant change, **create one and ask the user to review it** before writing any code.
+- When implementing from a design doc, **follow it strictly** and flag any deviations to the user.
+- After implementation, **update the design doc status** to `Implemented`.
+
+---
+
+## 9. General Claude Behaviour Rules
 
 - Always work on the **correct branch** for the task — confirm with the user if unsure.
 - When making changes, **read existing files first** before modifying them.
