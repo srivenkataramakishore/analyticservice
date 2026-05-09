@@ -241,21 +241,8 @@ For small bug fixes, dependency upgrades, or minor tweaks, a design doc is **not
 - File naming: `<YYYY-MM-DD>-<short-description>.md` (e.g. `2026-05-09-add-pagination.md`)
 - For breaking changes / major versions, also place a copy at the root as `BREAKING_CHANGES.md`.
 
-```
-analyticservice/
-├── docs/
-│   └── design/
-│       ├── 2026-04-22-initial-analytics-service.md
-│       ├── 2026-05-09-add-pagination.md
-│       └── 2026-05-09-ver2-breaking-changes.md
-├── .claude/
-│   └── CLAUDE.md
-├── src/
-└── ...
-```
-
 ### Design Document Template
-Every design document must follow this structure:
+Every GitHub design doc header must include a `**Confluence**:` link (added automatically by Claude after creating the page):
 
 ```markdown
 # Design Document: <Feature or Change Title>
@@ -265,19 +252,14 @@ Every design document must follow this structure:
 **Branch**: <branch name>
 **Version**: <SemVer e.g. 2.0.0>
 **Status**: Draft | In Review | Approved | Implemented
-**Confluence**: <link to Confluence page>
+**Confluence**: <URL — added automatically by Claude>
 
 ---
 
 ## 1. Overview
 ## 2. Problem Statement
-## 3. Goals
-## 4. Non-Goals
-## 5. Proposed Solution
-  ### 5.1 API Changes
-  ### 5.2 Request & Response Changes
-  ### 5.3 Database Changes
-  ### 5.4 Architecture Changes
+## 3. Goals & Non-Goals
+## 5. Proposed Solution (API Changes, Request/Response, DB Changes, Architecture)
 ## 6. Breaking Changes
 ## 7. Migration Plan
 ## 8. Testing Plan
@@ -288,16 +270,16 @@ Every design document must follow this structure:
 ```
 
 ### Design Document Lifecycle
-1. **Draft** — Claude or the developer creates the GitHub doc and Confluence page before coding starts.
-2. **In Review** — Shared with the team for feedback; update the `Status` field in both places.
-3. **Approved** — Sign-off received; coding can begin.
-4. **Implemented** — Feature is merged; both docs updated with any deviations from the plan.
+1. **Draft** — Claude creates the GitHub doc AND the Confluence page simultaneously. No manual steps.
+2. **In Review** — Claude updates `Status` in both GitHub and Confluence.
+3. **Approved** — User approves; Claude begins implementation.
+4. **Implemented** — Claude updates status to `Implemented` in both GitHub and Confluence after merge.
 
 ### Claude's Responsibility
-- When asked to implement a new feature or breaking change, **always check `docs/design/`** for an existing design doc first.
-- If no design doc exists for a significant change, **create one and ask the user to review it** before writing any code.
-- When implementing from a design doc, **follow it strictly** and flag any deviations to the user.
-- After implementation, **update the design doc status** to `Implemented` in both GitHub and Confluence.
+- Always check `docs/design/` before implementing any significant feature.
+- If no design doc exists, create the GitHub doc AND the Confluence page in one step — no manual copy/paste required.
+- After creating the Confluence page, immediately update the GitHub doc's `**Confluence**:` field with the live URL.
+- After implementation, update status to `Implemented` in both places automatically.
 
 ---
 
@@ -323,42 +305,29 @@ Never duplicate content between GitHub and Confluence. Each has a distinct purpo
 | Roadmap & release planning | ❌ | ✅ |
 | QA test plans (non-unit) | ❌ | ✅ |
 
-### Rule: Always Cross-Reference
-- Every GitHub design doc **must** include a `**Confluence**:` link in its header pointing to the related Confluence page.
-- Every Confluence page **must** include a `**GitHub Design Doc**:` link pointing to the file in the repo.
-- Never copy content between the two — link to the other source instead.
+### Rule: Always Cross-Reference Automatically
+- Claude **always** creates both the GitHub design doc and the Confluence page in the same step.
+- Claude **always** updates the GitHub doc's `**Confluence**:` field with the live Confluence URL immediately after page creation.
+- Claude **always** includes the GitHub doc link inside the Confluence page.
+- No manual copy/paste or URL sharing is ever required from the user.
 
-### Rule: Confluence Page Structure
-Every Confluence page paired with a GitHub design doc must follow this template (see `docs/confluence-template.md`):
+### Confluence Setup
+- **Cloud ID**: `3f5031a1-3ffb-40ce-b0d0-fec16f52130a`
+- **Site**: `https://srivenkatarama.atlassian.net/wiki`
+- **Space**: Personal space (`spaceId: 65858`)
+- **Parent page for all design docs**: `analyticservice — Design Documents Index` (`pageId: 7995404`)
+- Each feature gets its own **child page** under the index page, titled `[analyticservice] <Feature Name>`.
 
-```
-Title: [analyticservice] <Feature Name>
-Labels: analyticservice, design, <version>
-
-Sections:
-1. Summary (2-3 sentences, non-technical)
+### Confluence Page Structure
+Each Confluence page must contain:
+1. Summary (2-3 non-technical sentences)
 2. Background & Motivation
 3. High-Level Architecture
 4. Stakeholders & Approvers
 5. Timeline
-6. Links (GitHub design doc, PR, branch, Jira ticket)
+6. Links (GitHub design doc, branch, PR, Jira ticket)
 7. Open Questions (cross-team only)
 8. Decision Log
-```
-
-### Rule: Who Owns What
-| Owner | Responsible For |
-|---|---|
-| Developer / Claude | GitHub `docs/design/` — technical spec, always up to date with code |
-| Developer / Claude | Creating the initial Confluence page stub with links |
-| PM / Tech Lead | Filling in Confluence business context, stakeholders, timeline |
-| Everyone | Keeping cross-references accurate after changes |
-
-### Claude's Responsibility for Confluence
-- When creating a GitHub design doc, **always also create a `docs/confluence-template-<name>.md`** file as a ready-to-paste Confluence page stub.
-- The stub must include the GitHub doc link, branch name, and all section headers pre-filled.
-- Remind the user: *"Please paste this into Confluence under the `analyticservice` space and add the Confluence URL back to the GitHub design doc header."*
-- Never create the Confluence page directly — Claude creates the stub file; the user pastes it into Confluence.
 
 ---
 
@@ -373,3 +342,4 @@ Sections:
 - When pushing multiple files, use a **single commit** with a clear message.
 - If a task involves breaking changes, **confirm with the user** before proceeding.
 - Keep `main` branch always **deployable**.
+- **Never ask the user to copy/paste anything** — Claude handles all GitHub and Confluence operations automatically.
