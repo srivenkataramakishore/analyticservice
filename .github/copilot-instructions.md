@@ -1,6 +1,36 @@
 # GitHub Copilot Instructions
 
-These instructions apply to all code suggestions and completions in the `analyticservice` repository. Follow them for every task.
+These instructions apply to all code suggestions, completions, and agent tasks in the `analyticservice` repository. Follow them for every task.
+
+---
+
+## ⚠️ Requirements-First Rule — Read this before anything else
+
+**Before writing any code, suggesting any implementation, or making any file changes:**
+
+1. **Read [`docs/REQUIREMENTS.md`](../docs/REQUIREMENTS.md)** in full.
+2. **Confirm the feature has an entry with status `Approved`.**
+3. If no entry exists, **stop and tell the user** — do not proceed until a requirement entry is added and approved.
+4. Every PR description must **reference the `REQ-<ID>`** from `docs/REQUIREMENTS.md` and **check off each AC and NFR** that applies.
+5. After merge, the requirement entry status must be updated to `Implemented`.
+
+> **Never write code for a feature that does not have an `Approved` entry in `docs/REQUIREMENTS.md`.**
+
+### AC and NFR checklist in every PR
+Every PR must include:
+```markdown
+## Requirements
+- Implements: REQ-<ID>
+- Jira: KN-<N>
+
+## Acceptance criteria covered
+- [x] AC-1: ...
+- [x] AC-2: ...
+
+## NFRs addressed
+- NFR-P1: p95 latency < 200 ms ✅
+- NFR-S1: JWT auth enforced ✅
+```
 
 ---
 
@@ -34,8 +64,8 @@ These instructions apply to all code suggestions and completions in the `analyti
 - Always wrap route handlers in `try/catch` and return proper HTTP error responses.
 - Never expose raw error messages or stack traces in responses.
 - Always validate and sanitize query params before use.
-- Return consistent JSON error shape: `{ error: '<message>' }`.
-- Return consistent JSON success shape: `{ <id>, startDate, endDate, count, data: [...] }`.
+- Return consistent JSON error shape: `{ error: { code: string, message: string } }`.
+- Return consistent JSON success shape per the spec in `docs/REQUIREMENTS.md`.
 
 ---
 
@@ -44,6 +74,7 @@ These instructions apply to all code suggestions and completions in the `analyti
 - **Always use parameterized queries** (`$1`, `$2`) — never interpolate variables into SQL strings.
 - Default sort: `ORDER BY event_time DESC` on all event queries.
 - Table: `analytics_events` — columns: `user_id`, `device_id`, `event_type`, `event_time`.
+- Every schema change must include a migration script in `migrations/`.
 
 ---
 
@@ -57,17 +88,20 @@ These instructions apply to all code suggestions and completions in the `analyti
 - Framework: **Jest** + **Supertest** for API; **Jest** + **React Testing Library** for UI.
 - Always mock `src/db.js` using `jest.mock('../db')` — never hit a real database in tests.
 - Test file location: `src/__tests__/<module>.test.js` for API; `src/components/<Name>/<Name>.test.jsx` for UI.
+- **Every test must map to an AC in `docs/REQUIREMENTS.md`.** Add a comment above each `it()` block: `// REQ-<ID> AC-<N>`.
 - Every new API endpoint must have tests for:
-  - Happy path (200 with correct data)
+  - Happy path (200/201 with correct data)
   - Missing required params (400)
   - Invalid input format (400)
+  - Wrong or missing auth token (401 / 403)
   - Database/server error (500)
 - Every new UI component must have tests for:
   - Renders correctly with default props
   - Renders all visual states (loading, empty, error)
   - Handles user interactions correctly
-- Naming: `describe('GET /analytics/<route>', () => { it('should ...') })` for API.
-- Naming: `describe('<ComponentName>', () => { it('should render ...') })` for UI.
+- Naming:
+  - API: `describe('POST /api/v1/analytics/events', () => { it('should ...') })`
+  - UI: `describe('<ComponentName>', () => { it('should render ...') })`
 - Minimum **80% code coverage**.
 
 ---
@@ -77,11 +111,13 @@ These instructions apply to all code suggestions and completions in the `analyti
 This project follows Spec-Driven Development. **Never write code before a spec exists and is approved.**
 
 ### API SDD
+- Check `docs/REQUIREMENTS.md` for an `Approved` entry **first**.
 - API design doc must exist in `docs/design/` before any route code is written.
 - Design doc defines: endpoint, params, request/response shape, DB changes.
 - Code must match the spec exactly — flag any deviations.
 
 ### UI SDD
+- Check `docs/REQUIREMENTS.md` for an `Approved` entry **first**.
 - A **Figma design** must exist before any UI component code is written.
 - A **UI design doc** must exist in `docs/design/` (prefix: `ui-`) before coding.
 - Code must implement the Figma spec exactly — never invent UI without a design reference.
@@ -101,19 +137,18 @@ src/components/
   <ComponentName>/
     <ComponentName>.jsx         ← Component implementation
     <ComponentName>.stories.jsx ← Storybook stories (one per state)
-    <ComponentName>.test.jsx    ← Unit tests
+    <ComponentName>.test.jsx    ← Unit tests (each mapped to a REQ AC)
 ```
 
 #### Storybook Story Requirements
 - Every component needs stories for: `Default`, `Loading`, `Empty`, `Error`
 - Story names must match Figma frame names where possible
-- Export a `Default` story at minimum
 
 #### UI Component Rules
 - Always implement all visual states: default, loading, empty, error
 - Always add ARIA labels and keyboard navigation
 - Never hardcode colours — always use design tokens / CSS variables
-- Always implement responsive behaviour for mobile, tablet, desktop
+- Always implement responsive behaviour for mobile (≥320px), tablet (≥768px), desktop (≥1280px)
 - Use React functional components with hooks only — no class components
 
 ---
@@ -165,14 +200,43 @@ Put here: High-level architecture, product requirements, user stories + acceptan
 ### Never duplicate — always cross-reference
 - GitHub design doc header must include `**Confluence**:` and `**Figma**:` links.
 - Confluence page must include a `**GitHub Design Doc**:` link.
-- Both are created automatically — no copy/paste required.
 
 ---
 
 ## Pull Requests
-- PR titles follow Conventional Commits format.
-- API PR descriptions must include: Summary, Changes, Breaking Changes, How to Test, Related Issues.
-- UI PR descriptions must also include: Screenshots or Figma link, Visual States covered, Storybook link.
+
+Every PR description **must** follow this template:
+
+```markdown
+## Summary
+<!-- What does this PR do? -->
+
+## Requirements
+- Implements: [REQ-<ID>](../docs/REQUIREMENTS.md#req-<id>)
+- Jira: [KN-<N>](https://srivenkatarama.atlassian.net/browse/KN-<N>)
+
+## Acceptance criteria covered
+- [x] AC-1: ...
+- [x] AC-2: ...
+
+## NFRs addressed
+- NFR-P1: p95 latency < 200 ms ✅
+- NFR-S1: JWT auth enforced ✅
+
+## Changes
+- 
+
+## Breaking Changes
+<!-- List any breaking changes or write "None" -->
+
+## UI Changes
+<!-- Screenshot or Figma link if UI is affected, or write "None" -->
+
+## How to Test
+
+## Related Issues
+```
+
 - All PRs require at least one reviewer and must pass CI before merging.
 - PRs with breaking changes must be labeled `breaking-change`.
 - PRs with UI changes must include a screenshot or Figma link.

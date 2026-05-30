@@ -4,6 +4,24 @@ This file defines how Claude should behave across all software development lifec
 
 ---
 
+## ⚠️ READ THIS FIRST — Requirements-First Rule
+
+**Before doing ANY work in this repository — design docs, code, PRs, Confluence pages, Figma files — you must:**
+
+1. **Read [`docs/REQUIREMENTS.md`](../docs/REQUIREMENTS.md)** in full.
+2. **Confirm the feature has an entry** with status `Approved` before implementing anything.
+3. **If no entry exists**, create one in `docs/REQUIREMENTS.md` (status `Draft`) with:
+   - Functional description
+   - Acceptance criteria (Given / When / Then, testable)
+   - NFR checklist (from the Global NFR Catalogue in that file)
+4. **Get user approval** to advance status to `Approved`.
+5. **Only then** proceed to design docs, code, and PRs.
+6. **After merge**, update the entry status to `Implemented` and add the PR link.
+
+> **Never write code, create a branch, open a PR, or push any files for a feature that does not have an `Approved` entry in `docs/REQUIREMENTS.md`.**
+
+---
+
 ## 1. Branching Strategy
 
 - **Default branch**: `main` — always production-ready, never push breaking changes directly.
@@ -114,6 +132,21 @@ Always include the following sections in every PR description:
 ```markdown
 ## Summary
 <!-- What does this PR do? -->
+
+## Requirements
+<!-- Link to the REQUIREMENTS.md entry: REQ-<ID> -->
+- Implements: [REQ-<ID>](../docs/REQUIREMENTS.md#req-<id>-short-title)
+- Jira: [KN-<N>](https://srivenkatarama.atlassian.net/browse/KN-<N>)
+
+## Acceptance criteria covered
+<!-- List each AC from REQUIREMENTS.md and confirm it is met -->
+- [x] AC-1: ...
+- [x] AC-2: ...
+
+## NFRs addressed
+<!-- List each NFR from REQUIREMENTS.md that applies -->
+- NFR-P1: p95 latency < 200 ms ✅
+- NFR-S1: JWT auth enforced ✅
 
 ## Changes
 - 
@@ -249,15 +282,19 @@ This project follows **Spec-Driven Development** — the spec is always written 
 
 #### API Spec Workflow
 ```
-Design doc written (GitHub + Confluence)
+Requirement added to docs/REQUIREMENTS.md (status: Draft)
        ↓
-User approves
+User approves (status: Approved)
+       ↓
+Design doc written in docs/design/ + Confluence page created
        ↓
 Code implemented to match spec
        ↓
-Tests validate against spec
+Tests validate against AC in REQUIREMENTS.md
        ↓
-Status updated to Implemented
+PR description references REQ-<ID> and checks off each AC and NFR
+       ↓
+Merged → status updated to Implemented in REQUIREMENTS.md
 ```
 
 #### API Design Doc Requirements
@@ -289,23 +326,25 @@ For UI work, the spec lives in **Figma** (design) and **Confluence** (user stori
 
 #### UI Spec Workflow
 ```
-Figma design exists and is approved
+Requirement added to docs/REQUIREMENTS.md (status: Draft)
+       ↓
+User approves (status: Approved)
+       ↓
+Figma design created and shared
        ↓
 Claude reads Figma (via Figma MCP)
        ↓
-Claude creates UI design doc (GitHub docs/design/)
-       ↓
-Claude creates Confluence page (user stories + acceptance criteria)
-       ↓
-User approves
+Claude creates UI design doc (docs/design/) + Confluence page
        ↓
 Claude generates component code from Figma spec
        ↓
 Claude generates Storybook stories for all component states
        ↓
-Claude writes unit tests (props, states, interactions)
+Claude writes unit tests — each test maps to an AC in REQUIREMENTS.md
        ↓
-Status updated to Implemented in GitHub + Confluence
+PR references REQ-<ID> and checks off all ACs and NFRs
+       ↓
+Merged → status updated to Implemented in REQUIREMENTS.md
 ```
 
 #### UI Design Doc Requirements
@@ -318,72 +357,6 @@ Status updated to Implemented in GitHub + Confluence
   - Responsive behaviour (mobile/tablet/desktop breakpoints)
   - Design tokens used (colors, spacing, typography)
 - Always paired with a Confluence page (user stories + AC)
-
-#### UI Design Doc Template
-```markdown
-# UI Design Document: <Component Name>
-
-**Date**: YYYY-MM-DD
-**Author**: <name>
-**Branch**: ui/<short-description>
-**Version**: <SemVer>
-**Status**: Draft | In Review | Approved | Implemented
-**Figma**: <Figma file/frame URL>
-**Confluence**: <URL — added automatically by Claude>
-
----
-
-## 1. Overview
-<!-- What is this component? Where is it used? -->
-
-## 2. Component Props
-| Prop | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| eventType | string | Yes | — | Event type to display |
-
-## 3. Visual States
-| State | Description | Figma Frame |
-|-------|-------------|-------------|
-| Default | Normal loaded state | <link> |
-| Loading | Skeleton/spinner shown | <link> |
-| Empty | No data available | <link> |
-| Error | Failed to load | <link> |
-
-## 4. Design Tokens
-| Token | Value | Usage |
-|-------|-------|-------|
-| --color-primary | #0052CC | CTA buttons |
-
-## 5. Accessibility
-- ARIA labels required: ...
-- Keyboard navigation: ...
-- Colour contrast: WCAG AA minimum
-
-## 6. Responsive Behaviour
-| Breakpoint | Behaviour |
-|------------|-----------|
-| Mobile (<768px) | Stacked layout |
-| Tablet (768-1024px) | 2-column |
-| Desktop (>1024px) | Full layout |
-
-## 7. Acceptance Criteria
-- Given <context>, when <action>, then <result>
-
-## 8. References
-- Figma: <link>
-- Storybook: <link once created>
-```
-
-#### Confluence Page for UI (User Stories)
-Each UI Confluence page must contain:
-1. Summary (non-technical, 2-3 sentences)
-2. User Stories with Acceptance Criteria
-3. Figma link
-4. Stakeholders & Approvers
-5. Timeline
-6. Links (GitHub design doc, branch, PR)
-7. Open Questions
-8. Decision Log
 
 #### Storybook Requirements
 - Every component must have a `.stories.jsx` file
@@ -464,11 +437,12 @@ Never duplicate content between GitHub and Confluence. Each has a distinct purpo
 
 ## 11. General Claude Behaviour Rules
 
+- **Always read `docs/REQUIREMENTS.md` before starting any task.** No exceptions.
 - Always work on the **correct branch** for the task — confirm with the user if unsure.
 - When making changes, **read existing files first** before modifying them.
 - Never remove existing functionality unless explicitly asked.
 - Always add or update **tests** when modifying route handlers, business logic, or UI components.
-- When adding new endpoints, follow the existing patterns in `src/routes/analytics.js`.
+- When adding new endpoints, follow the existing patterns in `src/routes/`.
 - When adding new UI components, always generate the matching Storybook stories.
 - Always use **parameterized SQL queries** — never build SQL with string concatenation.
 - When pushing multiple files, use a **single commit** with a clear message.
@@ -476,3 +450,4 @@ Never duplicate content between GitHub and Confluence. Each has a distinct purpo
 - Keep `main` branch always **deployable**.
 - **Never ask the user to copy/paste anything** — Claude handles all GitHub, Confluence, and Figma operations automatically.
 - For UI tasks: **always check for a Figma spec first** — never invent UI without a design reference.
+- Every PR description **must** reference the `REQ-<ID>` from `docs/REQUIREMENTS.md` and check off all ACs and NFRs.
