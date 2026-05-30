@@ -34,6 +34,24 @@ Every PR must include:
 
 ---
 
+## Jira ticket mapping
+
+If Copilot cannot reach Jira directly, use the requirement files in `docs/requirements/` — they are the full technical spec for every ticket and are always up to date.
+
+| Jira ticket | Summary | Requirement file(s) |
+|-------------|---------|---------------------|
+| [KN-1](https://srivenkatarama.atlassian.net/browse/KN-1) | [BUG] API failure — returning 503 Service Unavailable | — (bug, no REQ file) |
+| [KN-2](https://srivenkatarama.atlassian.net/browse/KN-2) | [New Functionality] Add Data Service API for data analytics | [REQ-001](../docs/requirements/REQ-001-event-ingestion.md), [REQ-002](../docs/requirements/REQ-002-reports-api.md) |
+| [KN-3](https://srivenkatarama.atlassian.net/browse/KN-3) | [New Functionality] Analytics Dashboard UI for Data Service API | [REQ-003](../docs/requirements/REQ-003-analytics-dashboard.md) |
+
+### When Jira is unreachable
+1. Find the Jira ticket key in the table above (e.g. `KN-2`).
+2. Open the linked requirement file(s) in `docs/requirements/` — they contain the full description, acceptance criteria, NFRs, data flow, and decision log.
+3. Use the requirement file as the source of truth for all implementation decisions.
+4. Never ask the user to paste Jira content — read the repo files instead.
+
+---
+
 ## Language & Runtime
 - **JavaScript (Node.js)** only. Do not suggest TypeScript unless explicitly asked.
 - Use **ES2020+** syntax (async/await, optional chaining, nullish coalescing).
@@ -65,7 +83,7 @@ Every PR must include:
 - Never expose raw error messages or stack traces in responses.
 - Always validate and sanitize query params before use.
 - Return consistent JSON error shape: `{ error: { code: string, message: string } }`.
-- Return consistent JSON success shape per the spec in `docs/REQUIREMENTS.md`.
+- Return consistent JSON success shape per the spec in `docs/requirements/`.
 
 ---
 
@@ -88,7 +106,7 @@ Every PR must include:
 - Framework: **Jest** + **Supertest** for API; **Jest** + **React Testing Library** for UI.
 - Always mock `src/db.js` using `jest.mock('../db')` — never hit a real database in tests.
 - Test file location: `src/__tests__/<module>.test.js` for API; `src/components/<Name>/<Name>.test.jsx` for UI.
-- **Every test must map to an AC in `docs/REQUIREMENTS.md`.** Add a comment above each `it()` block: `// REQ-<ID> AC-<N>`.
+- **Every test must map to an AC in `docs/requirements/`.** Add a comment above each `it()` block: `// REQ-<ID> AC-<N>`.
 - Every new API endpoint must have tests for:
   - Happy path (200/201 with correct data)
   - Missing required params (400)
@@ -111,13 +129,13 @@ Every PR must include:
 This project follows Spec-Driven Development. **Never write code before a spec exists and is approved.**
 
 ### API SDD
-- Check `docs/REQUIREMENTS.md` for an `Approved` entry **first**.
+- Check `docs/requirements/` for an `Approved` entry **first**.
 - API design doc must exist in `docs/design/` before any route code is written.
 - Design doc defines: endpoint, params, request/response shape, DB changes.
 - Code must match the spec exactly — flag any deviations.
 
 ### UI SDD
-- Check `docs/REQUIREMENTS.md` for an `Approved` entry **first**.
+- Check `docs/requirements/` for an `Approved` entry **first**.
 - A **Figma design** must exist before any UI component code is written.
 - A **UI design doc** must exist in `docs/design/` (prefix: `ui-`) before coding.
 - Code must implement the Figma spec exactly — never invent UI without a design reference.
@@ -212,7 +230,7 @@ Every PR description **must** follow this template:
 <!-- What does this PR do? -->
 
 ## Requirements
-- Implements: [REQ-<ID>](../docs/REQUIREMENTS.md#req-<id>)
+- Implements: [REQ-<ID>](../docs/requirements/REQ-<ID>-<title>.md)
 - Jira: [KN-<N>](https://srivenkatarama.atlassian.net/browse/KN-<N>)
 
 ## Acceptance criteria covered
