@@ -8,17 +8,22 @@ This file defines how Claude should behave across all software development lifec
 
 **Before doing ANY work in this repository — design docs, code, PRs, Confluence pages, Figma files — you must:**
 
-1. **Read [`docs/REQUIREMENTS.md`](../docs/REQUIREMENTS.md)** in full.
-2. **Confirm the feature has an entry** with status `Approved` before implementing anything.
-3. **If no entry exists**, create one in `docs/REQUIREMENTS.md` (status `Draft`) with:
-   - Functional description
+1. **Read [`docs/REQUIREMENTS.md`](../docs/REQUIREMENTS.md)** in full, including the requirement index at the bottom.
+2. **Confirm the feature has an entry** with status `Approved` in the index before implementing anything.
+3. **If no entry exists**, create a new requirement file `docs/requirements/REQ-<next-ID>-<kebab-case-title>.md` using the template in `docs/REQUIREMENTS.md`, then add a row for it in the index table in `docs/REQUIREMENTS.md`. The new file must include:
+   - Functional description and user stories
+   - In scope / out of scope
+   - Data flow
    - Acceptance criteria (Given / When / Then, testable)
-   - NFR checklist (from the Global NFR Catalogue in that file)
-4. **Get user approval** to advance status to `Approved`.
-5. **Only then** proceed to design docs, code, and PRs.
-6. **After merge**, update the entry status to `Implemented` and add the PR link.
+   - NFR checklist (from the Global NFR Catalogue in `docs/REQUIREMENTS.md`)
+   - Status: `Draft`
+4. **Show the draft to the user for review** — do not push to the repo until confirmed.
+5. **After confirmation**, push `docs/requirements/REQ-<ID>-<title>.md` and the updated index in `docs/REQUIREMENTS.md` together in a single commit.
+6. **Get user approval** to advance status to `Approved`.
+7. **Only then** proceed to design docs, code, and PRs.
+8. **After merge**, update the entry status to `Implemented` in both the requirement file and the index, and add the PR link.
 
-> **Never write code, create a branch, open a PR, or push any files for a feature that does not have an `Approved` entry in `docs/REQUIREMENTS.md`.**
+> **Never write code, create a branch, open a PR, or push any files for a feature that does not have an `Approved` entry in the `docs/requirements/` folder.**
 
 ---
 
@@ -134,17 +139,17 @@ Always include the following sections in every PR description:
 <!-- What does this PR do? -->
 
 ## Requirements
-<!-- Link to the REQUIREMENTS.md entry: REQ-<ID> -->
-- Implements: [REQ-<ID>](../docs/REQUIREMENTS.md#req-<id>-short-title)
+<!-- Link to the requirement file: docs/requirements/REQ-<ID>-<title>.md -->
+- Implements: [REQ-<ID>](../docs/requirements/REQ-<ID>-<title>.md)
 - Jira: [KN-<N>](https://srivenkatarama.atlassian.net/browse/KN-<N>)
 
 ## Acceptance criteria covered
-<!-- List each AC from REQUIREMENTS.md and confirm it is met -->
+<!-- List each AC from the requirement file and confirm it is met -->
 - [x] AC-1: ...
 - [x] AC-2: ...
 
 ## NFRs addressed
-<!-- List each NFR from REQUIREMENTS.md that applies -->
+<!-- List each NFR from the requirement file that applies -->
 - NFR-P1: p95 latency < 200 ms ✅
 - NFR-S1: JWT auth enforced ✅
 
@@ -282,7 +287,8 @@ This project follows **Spec-Driven Development** — the spec is always written 
 
 #### API Spec Workflow
 ```
-Requirement added to docs/REQUIREMENTS.md (status: Draft)
+New requirement file created at docs/requirements/REQ-<ID>-<title>.md (status: Draft)
++ index row added in docs/REQUIREMENTS.md
        ↓
 User approves (status: Approved)
        ↓
@@ -290,11 +296,11 @@ Design doc written in docs/design/ + Confluence page created
        ↓
 Code implemented to match spec
        ↓
-Tests validate against AC in REQUIREMENTS.md
+Tests validate against AC in requirement file
        ↓
 PR description references REQ-<ID> and checks off each AC and NFR
        ↓
-Merged → status updated to Implemented in REQUIREMENTS.md
+Merged → status updated to Implemented in requirement file + index
 ```
 
 #### API Design Doc Requirements
@@ -317,7 +323,7 @@ For UI work, the spec lives in **Figma** (design) and **Confluence** (user stori
 
 #### UI Spec Stack
 | Layer | Tool | Purpose |
-|-------|------|---------|
+|-------|------|---------| 
 | **Design spec** | Figma | Source of truth — components, variants, states, tokens |
 | **User stories** | Confluence | Who needs it, why, acceptance criteria |
 | **Living contract** | Storybook | Running visual spec — all states documented |
@@ -326,7 +332,8 @@ For UI work, the spec lives in **Figma** (design) and **Confluence** (user stori
 
 #### UI Spec Workflow
 ```
-Requirement added to docs/REQUIREMENTS.md (status: Draft)
+New requirement file created at docs/requirements/REQ-<ID>-<title>.md (status: Draft)
++ index row added in docs/REQUIREMENTS.md
        ↓
 User approves (status: Approved)
        ↓
@@ -340,11 +347,11 @@ Claude generates component code from Figma spec
        ↓
 Claude generates Storybook stories for all component states
        ↓
-Claude writes unit tests — each test maps to an AC in REQUIREMENTS.md
+Claude writes unit tests — each test maps to an AC in the requirement file
        ↓
 PR references REQ-<ID> and checks off all ACs and NFRs
        ↓
-Merged → status updated to Implemented in REQUIREMENTS.md
+Merged → status updated to Implemented in requirement file + index
 ```
 
 #### UI Design Doc Requirements
@@ -437,7 +444,8 @@ Never duplicate content between GitHub and Confluence. Each has a distinct purpo
 
 ## 11. General Claude Behaviour Rules
 
-- **Always read `docs/REQUIREMENTS.md` before starting any task.** No exceptions.
+- **Always read `docs/REQUIREMENTS.md` and the requirement index before starting any task.** No exceptions.
+- **Requirements live in individual files** under `docs/requirements/REQ-<ID>-<title>.md` — never as inline entries in `docs/REQUIREMENTS.md` itself. `docs/REQUIREMENTS.md` is the index and template only.
 - Always work on the **correct branch** for the task — confirm with the user if unsure.
 - When making changes, **read existing files first** before modifying them.
 - Never remove existing functionality unless explicitly asked.
@@ -450,4 +458,4 @@ Never duplicate content between GitHub and Confluence. Each has a distinct purpo
 - Keep `main` branch always **deployable**.
 - **Never ask the user to copy/paste anything** — Claude handles all GitHub, Confluence, and Figma operations automatically.
 - For UI tasks: **always check for a Figma spec first** — never invent UI without a design reference.
-- Every PR description **must** reference the `REQ-<ID>` from `docs/REQUIREMENTS.md` and check off all ACs and NFRs.
+- Every PR description **must** reference the `REQ-<ID>` linking to `docs/requirements/REQ-<ID>-<title>.md` and check off all ACs and NFRs.
