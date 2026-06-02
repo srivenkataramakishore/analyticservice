@@ -20,12 +20,13 @@ docs/
     REQ-003-analytics-dashboard.md
     REQ-004-openapi-docs.md
     REQ-005-redshift-archival.md
+    REQ-006-data-export.md
     REQ-<ID>-<short-title>.md              ← one file per requirement
 ```
 
 **Rules:**
 - One file per requirement — never combine multiple requirements in one file.
-- File name format: `REQ-<zero-padded-ID>-<kebab-case-title>.md` (e.g. `REQ-006-purge-policy.md`).
+- File name format: `REQ-<zero-padded-ID>-<kebab-case-title>.md` (e.g. `REQ-007-purge-policy.md`).
 - IDs are sequential and never reused, even if a requirement is cancelled.
 - The file is the single source of truth — Jira tickets, PRs, and Confluence pages all link back to it.
 
@@ -219,3 +220,4 @@ These NFRs apply to **all** features unless explicitly exempted. Any exemption m
 | [REQ-003](requirements/REQ-003-analytics-dashboard.md) | Analytics dashboard UI | UI | Approved |
 | [REQ-004](requirements/REQ-004-openapi-docs.md) | OpenAPI / Swagger documentation | API | Draft |
 | [REQ-005](requirements/REQ-005-redshift-archival.md) | Redshift data archival | Data | Draft |
+| [REQ-006](requirements/REQ-006-data-export.md) | Data export functionality | API | Approved |
