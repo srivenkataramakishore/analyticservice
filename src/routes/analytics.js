@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
+const { validateExportParams } = require('../export/export-validator');
+const { queryEvents, serialise } = require('../export/export-service');
 
 /**
  * Validate common query params: startDate, endDate
@@ -97,6 +99,48 @@ router.get('/device', async (req, res) => {
   } catch (err) {
     console.error('Error fetching analytics by device:', err);
     return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * GET /analytics/export
+ * REQ-006 — KN-4
+ * Query params: format (csv|json), startDate, endDate, userId?, eventType?
+ */
+router.get('/export', async (req, res) => {
+  const validationError = validateExportParams(req.query);
+  if (validationError) {
+    return res.status(validationError.status).json({
+      error: {
+        code: validationError.code,
+        message: validationError.message,
+      },
+    });
+  }
+
+  const { format, startDate, endDate, userId, eventType } = req.query;
+
+  try {
+    const rows = await queryEvents({ startDate, endDate, userId, eventType });
+    const body = serialise(rows, format);
+
+    if (format === 'csv') {
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="export.csv"');
+    } else {
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', 'attachment; filename="export.json"');
+    }
+
+    return res.status(200).send(body);
+  } catch (err) {
+    console.error('Error exporting analytics data:', err);
+    return res.status(500).json({
+      error: {
+        code: 'EXPORT_FAILED',
+        message: 'Failed to export analytics data',
+      },
+    });
   }
 });
 
