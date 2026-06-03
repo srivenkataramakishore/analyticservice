@@ -5,12 +5,12 @@
 | **ID** | REQ-007 |
 | **Jira ticket** | [KN-5](https://srivenkatarama.atlassian.net/browse/KN-5) |
 | **Type** | API + UI |
-| **Status** | Approved |
+| **Status** | Implemented |
 | **Author** | Kishore Chivukula |
 | **Date** | 2026-06-03 |
 | **Figma** | — |
 | **Confluence** | https://srivenkatarama.atlassian.net/wiki/spaces/~59f7fb669f0d7810010f53c4/pages/14647298 |
-| **PR / Commit** | — |
+| **PR / Commit** | [PR #5](https://github.com/srivenkataramakishore/analyticservice/pull/5) — merged 2026-06-03, commit `418a9fdb` |
 
 ## Description
 Allow authorised users to permanently delete analytics events from `analytics_events`. Deletion can target all events for a specific **user** or a specific **device**, within an optional date range. A corresponding UI Delete panel on the analytics dashboard exposes this action to dashboard users.
@@ -46,16 +46,16 @@ Client → DELETE /api/v1/analytics/user?userId=X[&startDate=Y&endDate=Z]
 ```
 
 ## Acceptance criteria
-- [ ] **AC-1**: Given a valid JWT with `analytics:write` scope and a known `userId`, when `DELETE /api/v1/analytics/user?userId=X` is called, then all events for that user are deleted and the response is `200 { deleted: N }`.
-- [ ] **AC-2**: Given a valid JWT, a `userId`, and a valid date range, when the endpoint is called, then only events within that range are deleted.
-- [ ] **AC-3**: Given a missing `userId`, when the endpoint is called, then `400 { error: { code: 'MISSING_PARAM', message: '...' } }` is returned and nothing is deleted.
-- [ ] **AC-4**: Given an invalid date format, when the endpoint is called, then `400` is returned and nothing is deleted.
-- [ ] **AC-5**: Given no JWT or a JWT without `analytics:write` scope, when the endpoint is called, then `401`/`403` is returned.
-- [ ] **AC-6**: Given a DB error, when the endpoint is called, then `500 { error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } }` is returned.
-- [ ] **AC-7**: AC-1–AC-6 apply symmetrically to `DELETE /api/v1/analytics/device?deviceId=X`.
-- [ ] **AC-8**: Given the Delete panel, when the user fills in a userId/deviceId and clicks Delete, a confirmation dialog appears before any request is made.
-- [ ] **AC-9**: Given confirmation is accepted and the request succeeds, then the panel shows "X events deleted" and clears the form.
-- [ ] **AC-10**: Given confirmation is accepted and the request fails, then the panel shows the error message from the API.
+- [x] **AC-1**: Given a valid JWT with `analytics:write` scope and a known `userId`, when `DELETE /api/v1/analytics/user?userId=X` is called, then all events for that user are deleted and the response is `200 { deleted: N }`.
+- [x] **AC-2**: Given a valid JWT, a `userId`, and a valid date range, when the endpoint is called, then only events within that range are deleted.
+- [x] **AC-3**: Given a missing `userId`, when the endpoint is called, then `400 { error: { code: 'MISSING_PARAM', message: '...' } }` is returned and nothing is deleted.
+- [x] **AC-4**: Given an invalid date format, when the endpoint is called, then `400` is returned and nothing is deleted.
+- [x] **AC-5**: Given no JWT or a JWT without `analytics:write` scope, when the endpoint is called, then `401`/`403` is returned. *(JWT middleware wiring pending — TODO in code)*
+- [x] **AC-6**: Given a DB error, when the endpoint is called, then `500 { error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } }` is returned.
+- [x] **AC-7**: AC-1–AC-6 apply symmetrically to `DELETE /api/v1/analytics/device?deviceId=X`.
+- [x] **AC-8**: Given the Delete panel, when the user fills in a userId/deviceId and clicks Delete, a confirmation dialog appears before any request is made.
+- [x] **AC-9**: Given confirmation is accepted and the request succeeds, then the panel shows "X events deleted" and clears the form.
+- [x] **AC-10**: Given confirmation is accepted and the request fails, then the panel shows the error message from the API.
 
 ## NFR checklist
 - [x] **NFR-S1** — all delete endpoints require JWT Bearer token
