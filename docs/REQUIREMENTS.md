@@ -21,6 +21,7 @@ docs/
     REQ-004-openapi-docs.md
     REQ-005-redshift-archival.md
     REQ-006-data-export.md
+    REQ-007-data-delete.md
     REQ-<ID>-<short-title>.md              ← one file per requirement
 ```
 
@@ -221,3 +222,4 @@ These NFRs apply to **all** features unless explicitly exempted. Any exemption m
 | [REQ-004](requirements/REQ-004-openapi-docs.md) | OpenAPI / Swagger documentation | API | Draft |
 | [REQ-005](requirements/REQ-005-redshift-archival.md) | Redshift data archival | Data | Draft |
 | [REQ-006](requirements/REQ-006-data-export.md) | Data export functionality | API | Approved |
+| [REQ-007](requirements/REQ-007-data-delete.md) | Data delete functionality | API + UI | Approved |
