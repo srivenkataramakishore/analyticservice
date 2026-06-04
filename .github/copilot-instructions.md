@@ -1,260 +1,93 @@
-# GitHub Copilot Instructions
+# Copilot Instructions — analyticservice
 
-These instructions apply to all code suggestions, completions, and agent tasks in the `analyticservice` repository. Follow them for every task.
-
----
-
-## ⚠️ Requirements-First Rule — Read this before anything else
-
-**Before writing any code, suggesting any implementation, or making any file changes:**
-
-1. **Read [`docs/REQUIREMENTS.md`](../docs/REQUIREMENTS.md)** in full.
-2. **Confirm the feature has an entry with status `Approved`.**
-3. If no entry exists, **stop and tell the user** — do not proceed until a requirement entry is added and approved.
-4. Every PR description must **reference the `REQ-<ID>`** from `docs/REQUIREMENTS.md` and **check off each AC and NFR** that applies.
-5. After merge, the requirement entry status must be updated to `Implemented`.
-
-> **Never write code for a feature that does not have an `Approved` entry in `docs/REQUIREMENTS.md`.**
-
-### AC and NFR checklist in every PR
-Every PR must include:
-```markdown
-## Requirements
-- Implements: REQ-<ID>
-- Jira: KN-<N>
-
-## Acceptance criteria covered
-- [x] AC-1: ...
-- [x] AC-2: ...
-
-## NFRs addressed
-- NFR-P1: p95 latency < 200 ms ✅
-- NFR-S1: JWT auth enforced ✅
-```
+This file defines how GitHub Copilot should behave in Chat and Edit mode for the `analyticservice` repository.
 
 ---
 
-## Jira ticket mapping
+## ⚠️ Requirements-First Rule
 
-If Copilot cannot reach Jira directly, use the requirement files in `docs/requirements/` — they are the full technical spec for every ticket and are always up to date.
+Before doing ANY work:
 
-| Jira ticket | Summary | Requirement file(s) |
-|-------------|---------|---------------------|
-| [KN-1](https://srivenkatarama.atlassian.net/browse/KN-1) | [BUG] API failure — returning 503 Service Unavailable | — (bug, no REQ file) |
-| [KN-2](https://srivenkatarama.atlassian.net/browse/KN-2) | [New Functionality] Add Data Service API for data analytics | [REQ-001](../docs/requirements/REQ-001-event-ingestion.md), [REQ-002](../docs/requirements/REQ-002-reports-api.md) |
-| [KN-3](https://srivenkatarama.atlassian.net/browse/KN-3) | [New Functionality] Analytics Dashboard UI for Data Service API | [REQ-003](../docs/requirements/REQ-003-analytics-dashboard.md) |
+1. Read `docs/REQUIREMENTS.md` in full.
+2. Confirm the feature has an `Approved` entry before implementing anything.
+3. If no entry exists, draft a new requirement file at `docs/requirements/REQ-<next-ID>-<kebab-case-title>.md` and show it to the user before pushing.
 
-### When Jira is unreachable
-1. Find the Jira ticket key in the table above (e.g. `KN-2`).
-2. Open the linked requirement file(s) in `docs/requirements/` — they contain the full description, acceptance criteria, NFRs, data flow, and decision log.
-3. Use the requirement file as the source of truth for all implementation decisions.
-4. Never ask the user to paste Jira content — read the repo files instead.
-
----
-
-## Language & Runtime
-- **JavaScript (Node.js)** only. Do not suggest TypeScript unless explicitly asked.
-- Use **ES2020+** syntax (async/await, optional chaining, nullish coalescing).
-- Never use `.then()/.catch()` chains — always use `async/await`.
+> Never write code, open a PR, or push files for a feature without an `Approved` requirement entry.
 
 ---
 
 ## Code Style
-- **2 spaces** indentation, no tabs.
-- **Single quotes** for all strings.
-- **Semicolons** always.
-- Max line length: **100 characters**.
-- Follow **ESLint recommended** rules.
 
-### Naming Conventions
-| Element | Convention | Example |
-|---------|------------|---------|
-| Variables & functions | camelCase | `userId`, `validateDateRange()` |
-| Constants | UPPER_SNAKE_CASE | `MAX_POOL_SIZE` |
-| Files | kebab-case | `analytics-router.js` |
-| Folders | kebab-case | `src/routes/` |
-| UI Components | PascalCase | `AnalyticsChart.jsx` |
-| UI Props | camelCase | `eventType`, `onDateChange` |
+- Language: JavaScript (Node.js). No TypeScript unless explicitly asked.
+- ESLint recommended rules.
+- 2 spaces indentation, single quotes, always semicolons, max 100 char line length.
+- `async/await` only — no `.then()/.catch()` chains.
+- Wrap async handlers in `try/catch`, never expose stack traces to client.
+- Parameterized SQL queries only (`$1`, `$2`) — never string-interpolate SQL.
+- Use connection pool from `src/db.js` — never create ad-hoc connections.
+- `ORDER BY event_time DESC` on all event queries unless specified otherwise.
 
----
-
-## Express & Routing
-- Always wrap route handlers in `try/catch` and return proper HTTP error responses.
-- Never expose raw error messages or stack traces in responses.
-- Always validate and sanitize query params before use.
-- Return consistent JSON error shape: `{ error: { code: string, message: string } }`.
-- Return consistent JSON success shape per the spec in `docs/requirements/`.
+## Naming
+- Variables/Functions: camelCase
+- Constants: UPPER_SNAKE_CASE
+- Files/Folders: kebab-case
+- UI Components: PascalCase
 
 ---
 
-## Database
-- Always use the connection pool from `src/db.js` — never create ad-hoc `pg` connections.
-- **Always use parameterized queries** (`$1`, `$2`) — never interpolate variables into SQL strings.
-- Default sort: `ORDER BY event_time DESC` on all event queries.
-- Table: `analytics_events` — columns: `user_id`, `device_id`, `event_type`, `event_time`.
-- Every schema change must include a migration script in `migrations/`.
+## Commits
 
----
-
-## Environment & Config
-- All config via `process.env` — never hardcode secrets, passwords, or hostnames.
-- Use `dotenv` for local development (`require('dotenv').config()` at entry point only).
-
----
-
-## Testing
-- Framework: **Jest** + **Supertest** for API; **Jest** + **React Testing Library** for UI.
-- Always mock `src/db.js` using `jest.mock('../db')` — never hit a real database in tests.
-- Test file location: `src/__tests__/<module>.test.js` for API; `src/components/<Name>/<Name>.test.jsx` for UI.
-- **Every test must map to an AC in `docs/requirements/`.** Add a comment above each `it()` block: `// REQ-<ID> AC-<N>`.
-- Every new API endpoint must have tests for:
-  - Happy path (200/201 with correct data)
-  - Missing required params (400)
-  - Invalid input format (400)
-  - Wrong or missing auth token (401 / 403)
-  - Database/server error (500)
-- Every new UI component must have tests for:
-  - Renders correctly with default props
-  - Renders all visual states (loading, empty, error)
-  - Handles user interactions correctly
-- Naming:
-  - API: `describe('POST /api/v1/analytics/events', () => { it('should ...') })`
-  - UI: `describe('<ComponentName>', () => { it('should render ...') })`
-- Minimum **80% code coverage**.
-
----
-
-## Spec-Driven Development (SDD)
-
-This project follows Spec-Driven Development. **Never write code before a spec exists and is approved.**
-
-### API SDD
-- Check `docs/requirements/` for an `Approved` entry **first**.
-- API design doc must exist in `docs/design/` before any route code is written.
-- Design doc defines: endpoint, params, request/response shape, DB changes.
-- Code must match the spec exactly — flag any deviations.
-
-### UI SDD
-- Check `docs/requirements/` for an `Approved` entry **first**.
-- A **Figma design** must exist before any UI component code is written.
-- A **UI design doc** must exist in `docs/design/` (prefix: `ui-`) before coding.
-- Code must implement the Figma spec exactly — never invent UI without a design reference.
-- Every component must have a matching **Storybook story** for each visual state.
-
-#### UI Spec Stack
-| Layer | Tool |
-|-------|------|
-| Design spec | Figma (source of truth) |
-| User stories | Confluence |
-| Living contract | Storybook |
-| Visual regression | Jest snapshots / Chromatic |
-
-#### Component File Structure
+Follow Conventional Commits:
 ```
-src/components/
-  <ComponentName>/
-    <ComponentName>.jsx         ← Component implementation
-    <ComponentName>.stories.jsx ← Storybook stories (one per state)
-    <ComponentName>.test.jsx    ← Unit tests (each mapped to a REQ AC)
+<type>(<scope>): <short summary under 72 chars>
 ```
-
-#### Storybook Story Requirements
-- Every component needs stories for: `Default`, `Loading`, `Empty`, `Error`
-- Story names must match Figma frame names where possible
-
-#### UI Component Rules
-- Always implement all visual states: default, loading, empty, error
-- Always add ARIA labels and keyboard navigation
-- Never hardcode colours — always use design tokens / CSS variables
-- Always implement responsive behaviour for mobile (≥320px), tablet (≥768px), desktop (≥1280px)
-- Use React functional components with hooks only — no class components
+Types: `feat`, `fix`, `chore`, `docs`, `test`, `refactor`, `perf`, `breaking`, `ui`
 
 ---
 
 ## Branching
-- Feature branches: `feature/<short-description>`
-- UI branches: `ui/<short-description>`
-- Bug fix branches: `fix/<short-description>`
-- Hotfix branches: `hotfix/<short-description>`
-- Breaking changes / major versions: `ver<X.Y>` (e.g. `ver2.0`)
-- Chore / maintenance: `chore/<short-description>`
-- Never commit breaking changes directly to `main`.
 
----
-
-## Commit Messages
-Follow **Conventional Commits**:
-```
-<type>(<scope>): <short summary under 72 chars>
-```
-Allowed types: `feat`, `fix`, `chore`, `docs`, `test`, `refactor`, `perf`, `breaking`, `ui`.
-
-Examples:
-```
-feat(analytics): add event-type filter to user endpoint
-fix(db): handle null userId gracefully
-ui(dashboard): add analytics event chart component
-breaking(analytics): restructure response payload for v2
-```
-
----
-
-## Breaking Changes
-- Always use a versioned branch (e.g. `ver2.0`) for breaking changes.
-- Create `BREAKING_CHANGES.md` at the root describing what changed and migration steps.
-- Bump `package.json` version following **SemVer** (breaking = MAJOR bump).
-- Never remove or rename existing query params without a major version bump.
-
----
-
-## Design Documents: GitHub vs Confluence Split
-
-### GitHub `docs/design/` — Code-centric, lives with the repo
-Put here: API specs, SQL/schema changes, breaking change details, UI component props/states/tokens/accessibility, Storybook story definitions, implementation decisions.
-
-### Confluence — Team-centric, visible to all stakeholders
-Put here: High-level architecture, product requirements, user stories + acceptance criteria, ADRs, runbooks, onboarding, roadmap, cross-team communication.
-
-### Never duplicate — always cross-reference
-- GitHub design doc header must include `**Confluence**:` and `**Figma**:` links.
-- Confluence page must include a `**GitHub Design Doc**:` link.
+- Feature: `feature/<description>`
+- Fix: `fix/<description>`
+- Breaking: `ver<X.Y>`
+- Hotfix: `hotfix/<description>`
+- UI: `ui/<description>`
+- Never push breaking changes directly to `main`.
 
 ---
 
 ## Pull Requests
 
-Every PR description **must** follow this template:
+Every PR description must include:
+- Link to `docs/requirements/REQ-<ID>-<title>.md`
+- Jira ticket: `https://srivenkatarama.atlassian.net/browse/KN-<N>`
+- Acceptance criteria checklist (each AC from the requirement file)
+- NFRs addressed
+- Breaking changes
+- UI screenshot or Figma link if applicable
 
-```markdown
-## Summary
-<!-- What does this PR do? -->
+---
 
-## Requirements
-- Implements: [REQ-<ID>](../docs/requirements/REQ-<ID>-<title>.md)
-- Jira: [KN-<N>](https://srivenkatarama.atlassian.net/browse/KN-<N>)
+## Testing
 
-## Acceptance criteria covered
-- [x] AC-1: ...
-- [x] AC-2: ...
+- Jest + Supertest. Storybook for UI.
+- 80% minimum code coverage.
+- Always mock `src/db.js` in unit tests.
+- Test happy path, missing params, invalid input, and DB errors.
 
-## NFRs addressed
-- NFR-P1: p95 latency < 200 ms ✅
-- NFR-S1: JWT auth enforced ✅
+---
 
-## Changes
-- 
+## Jira
 
-## Breaking Changes
-<!-- List any breaking changes or write "None" -->
+- Use the atlassian MCP tool to fetch Jira issue details.
+- Always reference the Jira ticket in PR descriptions.
+- Jira project: `KN` at `https://srivenkatarama.atlassian.net`
 
-## UI Changes
-<!-- Screenshot or Figma link if UI is affected, or write "None" -->
+---
 
-## How to Test
+## Design Docs & Confluence
 
-## Related Issues
-```
-
-- All PRs require at least one reviewer and must pass CI before merging.
-- PRs with breaking changes must be labeled `breaking-change`.
-- PRs with UI changes must include a screenshot or Figma link.
+- Design docs go in `docs/design/<YYYY-MM-DD>-<description>.md`.
+- Every design doc must be paired with a Confluence page (pageId parent: `7995404`).
+- GitHub docs: technical specs, SQL, code decisions.
+- Confluence: architecture, user stories, ADRs, runbooks.
