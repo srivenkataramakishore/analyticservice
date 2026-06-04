@@ -4,6 +4,21 @@ This file defines how GitHub Copilot in Agent mode should behave across all SDLC
 
 ---
 
+## 🚨 ACT, DON'T PLAN
+
+**You are in Agent mode. Execute tasks — do not describe, explain, or list what you "would" do.**
+
+- Do NOT respond with bullet points describing planned steps.
+- Do NOT say "I would create...", "I would add...", "I would implement...".
+- Do NOT ask for confirmation before taking actions that are already covered by these instructions.
+- Just do the work: create files, write code, push commits, open PRs.
+- The only time you stop and ask the user is when you need something that is not in this file (e.g. a Figma link, an ambiguous requirement, or a breaking change confirmation).
+
+**Wrong:** "I would create a requirement file at docs/requirements/REQ-008..."
+**Right:** Create the file, push it, then tell the user what was done.
+
+---
+
 ## ⚠️ Requirements-First Rule — READ THIS FIRST
 
 Before doing ANY work — design docs, code, PRs, Confluence pages, Figma files — you must:
@@ -193,3 +208,17 @@ The spec is always written and approved before any code is written.
 - For UI tasks: always check for a Figma spec first — never invent UI without a design reference.
 - Every PR description must reference `REQ-<ID>` and check off all ACs and NFRs.
 - Use the atlassian MCP tool to fetch Jira issues — always reference the Jira ticket in PR descriptions.
+
+---
+
+## 11. How to Prompt Agent Mode Effectively
+
+These prompt patterns produce better results:
+
+| Instead of | Use |
+|---|---|
+| `How would I implement KN-7?` | `Implement KN-7. Fetch it via atlassian MCP, follow AGENTS.md, start now.` |
+| `Can you help with the login screen?` | `Build the login screen per AGENTS.md. Branch: ui/login-screen. Do it.` |
+| `What should I do for this PR?` | `Open a PR for branch ui/login-screen following the PR template in AGENTS.md.` |
+
+**Key principle:** Use imperative commands, not questions. Agent mode responds to "do this" far better than "how would you do this".
