@@ -16,6 +16,20 @@ Before doing ANY work:
 
 ---
 
+## 🐛 Bug Fixing
+
+For all bug fix tasks, follow **[`docs/BUG-FIXING.md`](../docs/BUG-FIXING.md)**.
+
+Key rules:
+- Bug fixes do **not** require a `REQ-NNN` document, but **must** have a Jira ticket (`KN-N`).
+- Always branch as `fix/<description>` or `hotfix/<description>` from `main`.
+- Write a regression test that fails before the fix and passes after.
+- Full test suite must pass and coverage must stay ≥ 80%.
+- Squash merge via PR — never push directly to `main`.
+- Transition the Jira ticket to `Done` and delete the branch after merge.
+
+---
+
 ## Code Style
 
 - Language: JavaScript (Node.js). No TypeScript unless explicitly asked.
