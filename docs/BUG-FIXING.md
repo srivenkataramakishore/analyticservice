@@ -13,6 +13,28 @@ This document defines the standard process and practices for identifying, triagi
 
 ---
 
+## Bug Fix SDLC — Stage Overview
+
+```
+1. Triage          → severity, Jira ticket, owner assigned
+       ↓
+2. Branch          → fix/<description> or hotfix/<description> from main
+       ↓
+3. Diagnose        → logs, reproduce locally, isolate root cause
+       ↓
+4. RCA             → written root cause analysis before any code is written
+       ↓
+5. Fix             → minimal code change scoped to the bug
+       ↓
+6. Test            → regression test first (TDD), full suite, coverage ≥ 80%
+       ↓
+7. Commit + PR     → conventional commit, PR with bug template
+       ↓
+8. Post-Fix        → Jira Done, branch deleted, logs monitored, RCA published
+```
+
+---
+
 ## 1. Bug Triage
 
 Before touching any code, answer these questions:
@@ -28,12 +50,12 @@ Before touching any code, answer these questions:
 
 **Severity levels:**
 
-| Severity | Definition | Response time |
-|---|---|---|
-| **P1 — Critical** | Data loss, security issue, service down | Immediate hotfix |
-| **P2 — High** | Core feature broken, no workaround | Same day |
-| **P3 — Medium** | Feature degraded, workaround exists | Next sprint |
-| **P4 — Low** | Cosmetic, minor UX issue | Backlog |
+| Severity | Definition | Response time | RCA required? |
+|---|---|---|---|
+| **P1 — Critical** | Data loss, security issue, service down | Immediate hotfix | Yes — within 24 hrs |
+| **P2 — High** | Core feature broken, no workaround | Same day | Yes — before PR merge |
+| **P3 — Medium** | Feature degraded, workaround exists | Next sprint | Optional |
+| **P4 — Low** | Cosmetic, minor UX issue | Backlog | No |
 
 Set severity on the Jira ticket before starting work.
 
@@ -96,9 +118,96 @@ aws logs start-query \
 
 ---
 
-## 4. Writing the Fix
+## 4. Root Cause Analysis (RCA)
 
-### 4.1 Rules
+For P1 and P2 bugs, a written RCA is **required before writing the fix**. It forces precise understanding of what broke and why, preventing a symptom-only patch.
+
+For P3 bugs it is optional but encouraged. For P4 it is not required.
+
+### 4.1 RCA Template
+
+Write the RCA as a comment on the Jira ticket first. For P1/P2, also publish it as a Confluence page under `analyticservice — Design Documents Index` after the fix is deployed.
+
+```markdown
+## Root Cause Analysis — <Short Bug Title>
+
+**Date:** YYYY-MM-DD
+**Severity:** P1 / P2 / P3
+**Jira:** KN-<N>
+**Author:** <your name>
+
+---
+
+### What Happened
+<!-- One paragraph: what the user/system experienced -->
+
+### Timeline
+| Time | Event |
+|---|---|
+| T+0 | First error appeared in logs |
+| T+X | Alert fired / issue reported |
+| T+X | Investigation started |
+| T+X | Root cause identified |
+| T+X | Fix deployed |
+| T+X | Service recovered |
+
+### Root Cause
+<!-- The precise technical reason the bug occurred.
+     Not the symptom — the underlying cause.
+     Example: "The catch block in GET /analytics/user returns 500 for all
+     error types, including DB pool timeouts. The upstream circuit breaker
+     treats 500s as service failures and opens after 5 consecutive errors." -->
+
+### Contributing Factors
+<!-- What conditions made this bug possible or harder to catch?
+     Examples: missing test coverage, no error differentiation,
+     no alerting on pool exhaustion, recent deploy without smoke test -->
+- 
+- 
+
+### Impact
+<!-- Who was affected, how many requests failed, any data loss? -->
+- Users affected:
+- Duration:
+- Requests failed:
+- Data loss: Yes / No
+
+### Fix Applied
+<!-- What code changed and why it resolves the root cause -->
+
+### Verification
+<!-- How was the fix confirmed to work? -->
+- [ ] Regression test passes
+- [ ] Full test suite passes
+- [ ] Logs monitored 15 min post-deploy — no recurrence
+
+### Prevention — What Changes So This Cannot Happen Again
+<!-- Specific, actionable items. Each must have an owner and Jira ticket. -->
+| Action | Owner | Jira |
+|---|---|---|
+| Add test for error type differentiation in catch blocks | | KN-<N> |
+| Add CloudWatch alert for pool exhaustion | | KN-<N> |
+| Add smoke test to deployment pipeline | | KN-<N> |
+```
+
+### 4.2 RCA Rules
+
+- **Root cause ≠ symptom.** "503 was returned" is a symptom. "All error types were mapped to 500 in the catch block, causing the upstream circuit breaker to misclassify transient DB timeouts as service failures" is a root cause.
+- **Use the 5 Whys technique** to drill down:
+  - Why did the circuit breaker open? → Because it received 5 consecutive 500s.
+  - Why did it receive 500s? → Because the catch block returns 500 for all errors.
+  - Why does the catch block do that? → No error type differentiation was implemented.
+  - Why was that missed? → No test case for DB timeout scenarios.
+  - Why was there no test? → Test coverage only covered happy path and missing params.
+- **Prevention actions must be specific and tracked.** "Be more careful" is not an action. "Add a Jest test for pool timeout returning 503" with a KN ticket is.
+- **P1 RCA must be posted to Confluence within 24 hours of the fix.**
+- **P2 RCA must be attached to the PR before merge.**
+
+---
+
+## 5. Writing the Fix
+
+### 5.1 Rules
 
 - Fix **only** what the bug report describes — do not refactor unrelated code.
 - Follow all code style rules from `CLAUDE.md` / `copilot-instructions.md`:
@@ -115,9 +224,10 @@ aws logs start-query \
 | Unauthorised | `401 Unauthorized` |
 | Forbidden | `403 Forbidden` |
 | Resource not found | `404 Not Found` |
+| DB connection / timeout | `503 Service Unavailable` |
 | DB or server error | `500 Internal Server Error` |
 
-### 4.2 Common bug patterns in this codebase
+### 5.2 Common bug patterns in this codebase
 
 | Pattern | What to check |
 |---|---|
@@ -131,9 +241,9 @@ aws logs start-query \
 
 ---
 
-## 5. Testing the Fix
+## 6. Testing the Fix
 
-### 5.1 Write a failing test first (TDD)
+### 6.1 Write a failing test first (TDD)
 
 Before applying the fix, write a test that reproduces the bug:
 
@@ -148,7 +258,7 @@ describe('GET /analytics/user', () => {
 
 Run it — it should **fail**. Then apply the fix and confirm it **passes**.
 
-### 5.2 Coverage requirements
+### 6.2 Coverage requirements
 
 - Every bug fix **must** include at least one new test covering the exact failure scenario.
 - Do not reduce existing coverage — minimum **80%** must be maintained.
@@ -157,7 +267,7 @@ Run it — it should **fail**. Then apply the fix and confirm it **passes**.
   - The happy path still works
   - Edge cases around the fixed area
 
-### 5.3 Run the full suite
+### 6.3 Run the full suite
 
 ```bash
 npm test                   # all tests must pass
@@ -166,7 +276,7 @@ npm test -- --coverage     # coverage must stay ≥ 80%
 
 ---
 
-## 6. Commit Message
+## 7. Commit Message
 
 Follow Conventional Commits:
 
@@ -180,14 +290,14 @@ Closes KN-<N>
 
 **Examples:**
 ```
+fix(analytics): return 503 on DB timeout instead of 500
 fix(analytics): return 400 when userId param is missing
 fix(db): handle null result from pool query gracefully
-fix(auth): reject expired JWT with 401 instead of 500
 ```
 
 ---
 
-## 7. Pull Request
+## 8. Pull Request
 
 Open a PR from `fix/<description>` → `main`. Use this description template:
 
@@ -198,8 +308,9 @@ Open a PR from `fix/<description>` → `main`. Use this description template:
 ## Bug Details
 - **Jira**: [KN-<N>](https://srivenkatarama.atlassian.net/browse/KN-<N>)
 - **Severity**: P1 / P2 / P3 / P4
-- **Root cause**: <!-- e.g. missing null guard on userId param -->
+- **Root cause**: <!-- one line summary from RCA -->
 - **Affected area**: <!-- e.g. GET /analytics/user route handler -->
+- **RCA**: <!-- link to Jira comment or Confluence page -->
 
 ## Reproduction Steps
 1. 
@@ -225,24 +336,22 @@ Closes KN-<N>
 - Squash merge into `main`.
 - All CI checks (tests, lint) must pass.
 - At least one reviewer for P2+.
-- P1 hotfixes may self-merge after tests pass — document the reason.
+- P2 bugs: RCA must be linked in the PR before merge.
+- P1 hotfixes may self-merge after tests pass — RCA due within 24 hours post-deploy.
 
 ---
 
-## 8. Post-Fix
+## 9. Post-Fix
 
 1. **Transition the Jira ticket** to `Done`.
 2. **Delete the branch** after merge.
 3. **Monitor logs** for 15 minutes post-deploy to confirm the fix holds.
-4. **For P1/P2 bugs**: write a brief incident note in Confluence under the `analyticservice — Design Documents Index` page covering:
-   - What broke
-   - Root cause
-   - Fix applied
-   - How to prevent recurrence
+4. **Publish RCA to Confluence** (P1 within 24 hrs, P2 before merge) under `analyticservice — Design Documents Index`.
+5. **Create follow-up Jira tickets** for every prevention action identified in the RCA.
 
 ---
 
-## 9. Hotfix Process (P1 only)
+## 10. Hotfix Process (P1 only)
 
 For production-critical bugs that cannot wait for a normal PR cycle:
 
@@ -256,24 +365,27 @@ git push origin hotfix/<description>
 ```
 
 - Tests must still pass before merging — no exceptions.
-- Document the hotfix in Confluence within 24 hours.
-- Follow up with a proper root-cause analysis on the Jira ticket.
+- RCA must be posted to Confluence within 24 hours.
+- Follow-up prevention tickets must be created on the Jira board within 48 hours.
 
 ---
 
-## 10. Quick Reference Checklist
+## 11. Quick Reference Checklist
 
 ```
 [ ] Jira ticket exists with correct severity
 [ ] Branched from main as fix/<description> or hotfix/<description>
 [ ] Bug reproduced locally before writing any code
 [ ] Root cause identified (not just symptoms)
+[ ] RCA written (required for P1/P2) — posted to Jira ticket
 [ ] Fix is minimal — only addresses the reported bug
 [ ] Regression test written (fails before fix, passes after)
 [ ] Full test suite passes: npm test
 [ ] Coverage ≥ 80%: npm test -- --coverage
 [ ] Commit message follows fix(<scope>): format with Closes KN-N
-[ ] PR description filled with bug details, root cause, and test checklist
+[ ] PR description filled with bug details, root cause, and RCA link
+[ ] RCA published to Confluence (P2 before merge, P1 within 24 hrs post-deploy)
+[ ] Prevention tickets created in Jira for each RCA action item
 [ ] Jira ticket transitioned to Done after merge
 [ ] Branch deleted after merge
 [ ] Logs monitored 15 min post-deploy
